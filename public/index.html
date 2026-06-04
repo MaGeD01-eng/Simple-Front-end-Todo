@@ -92,7 +92,7 @@ const API = 'https://simble-backend-todo-98sdose5j-mohamed-maged-s-projects1.ver
 async function getTodos() {
   const res = await fetch(API);
   
-  // بونص للأمان: تأكد من أن الـ Backend بيرجع الـ Array جوة data أو مباشرة
+  
   const result = await res.json();
   const data = result.data || result; // يدعم لو الـ Backend بيرجع {data: [...]}
 
