@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Todo App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      display: flex;
+      justify-content: center;
+      margin-top: 50px;
+    }
+
+    /* ضفنا الكونتينر هنا في الـ HTML عشان الشكل يتظبط */
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 350px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .input-group {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 70%;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 8px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.8;
+    }
+
+    .add-btn {
+      background: #28a745;
+      color: white;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f1f1f1;
+      padding: 8px;
+      border-radius: 5px;
+    }
+
+    .actions button {
+      margin-left: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Todo App</h1>
+
+  <div class="input-group">
+    <input id="todoInput" placeholder="Enter todo">
+    <button class="add-btn" onclick="addTodo()">Add</button>
+  </div>
+
+  <ul id="list"></ul>
+</div>
+
+<script>
+const API = 'https://simble-backend-todo.vercel.app/todos';
+
+async function getTodos() {
+  const res = await fetch(API);
+  
+  // بونص للأمان: تأكد من أن الـ Backend بيرجع الـ Array جوة data أو مباشرة
+  const result = await res.json();
+  const data = result.data || result; // يدعم لو الـ Backend بيرجع {data: [...]}
+
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+
+  if (Array.isArray(data)) {
+    data.forEach(todo => {
+      const li = document.createElement('li');
+
+      // تصليح: استخدام complete وتصليح السنجل كوتس '' حوالين الـ _id
+      li.innerHTML = `
+        <span style="text-decoration:${todo.complete ? 'line-through' : 'none'}">
+          ${todo.text}
+        </span>
+        <div class="actions">
+          <button onclick="toggle('${todo._id}')">✔</button>
+          <button onclick="del('${todo._id}')">❌</button>
+        </div>
+      `;
+
+      list.appendChild(li);
+    });
+  }
+}
+
+async function addTodo() {
+  const input = document.getElementById('todoInput');
+  if (!input.value.trim()) return; // منع إضافة تودو فاضي
+
+  await fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: input.value })
+  });
+
+  input.value = '';
+  getTodos();
+}
+
+async function del(id) {
+  await fetch(`${API}/${id}`, { method: 'DELETE' });
+  getTodos();
+}
+
+async function toggle(id) {
+  // ملحوظة: لو الـ PUT عندك بيعمل تحديث محتاج يتبعت معاه الـ body المعدل 
+  // بس مبدئياً اللينك كده هيخبط في الـ Route بتاع الـ Update صح
+  await fetch(`${API}/${id}`, { method: 'PUT' });
+  getTodos();
+}
+
+// تشغيل أول مرة عند فتح الصفحة
+getTodos();
+</script>
+
+</body>
+</html>
+
